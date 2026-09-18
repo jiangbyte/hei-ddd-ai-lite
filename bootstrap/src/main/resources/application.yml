@@ -125,10 +125,10 @@ hei:
       bucket: hei
       # MinIO 等兼容端点建议 true；官方 AWS 虚拟主机风格可改 false
       path-style-access: true
-      create-bucket-if-absent: false
-    # 向量库 Milvus（本地默认关闭，起好服务后改为 true）
+      create-bucket-if-absent: true
+    # 向量库 Milvus（可选集成，本地联调默认开启；无服务时可改 false）
     milvus:
-      enabled: false
+      enabled: true
       uri: http://127.0.0.1:19530
       database: default
       # token: # 与 username/password 二选一，优先 token
