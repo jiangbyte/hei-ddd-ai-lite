@@ -1,0 +1,18 @@
+# STDIO 传输：通过标准输入/输出与客户端通信（Cursor / Claude Desktop 子进程）
+# 启动：java -jar ai-mcp-demo-1.0-SNAPSHOT.jar --spring.profiles.active=stdio
+# 注意：MCP 帧走 stdout，因此必须关闭 console 日志，否则会污染协议
+
+spring:
+  main:
+    web-application-type: none
+    banner-mode: off
+  ai:
+    mcp:
+      server:
+        stdio: true
+
+logging:
+  pattern:
+    console:
+  level:
+    root: OFF

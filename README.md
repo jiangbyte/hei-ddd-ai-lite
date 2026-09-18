@@ -195,7 +195,7 @@ MySQL（Druid + MyBatis-Plus）与 Redis **默认启用**。S3 / Milvus 按开�
 | S3 | AWS SDK v2（兼容 AWS S3 / MinIO / R2 等），`hei.ddd.s3.enabled`；注入 `S3Client` / `S3ObjectStorage` |
 | Milvus | 向量库（milvus-sdk-java），`hei.ddd.milvus.enabled`（本地默认 `false`，起好服务后打开） |
 | Knife4j | API 文档（Boot4 专用 `knife4j-openapi3-boot4-spring-boot-starter`），访问 `/doc.html` |
-| Spring AI | BOM + openai starter；本地可用占位 `api-key` 启动，接入真实模型时配置 `OPENAI_API_KEY` |
+| Spring AI | BOM + ollama starter；默认 `http://127.0.0.1:11434`，可用 `OLLAMA_BASE_URL` / `OLLAMA_CHAT_MODEL` / `OLLAMA_EMBEDDING_MODEL` 覆盖 |
 
 启用 Milvus 后可注入 `MilvusClientV2` 或 `MilvusOperations`。默认连接：`http://127.0.0.1:19530`。
 

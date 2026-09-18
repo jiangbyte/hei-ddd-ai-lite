@@ -7,10 +7,15 @@ server:
 spring:
   application:
     name: hei-ddd-ai-lite
-  # Spring AI：本地联调占位，未配置真实 Key 时仅保证启动
+  # Spring AI：默认对接本机 Ollama（需已启动且已 pull 对应模型）
   ai:
-    openai:
-      api-key: ${OPENAI_API_KEY:sk-local-placeholder}
+    ollama:
+      base-url: ${OLLAMA_BASE_URL:http://127.0.0.1:11434}
+      chat:
+        options:
+          model: ${OLLAMA_CHAT_MODEL:qwen2.5:7b}
+      embedding:
+        model: ${OLLAMA_EMBEDDING_MODEL:bge-m3}
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -126,14 +131,14 @@ hei:
       # MinIO 等兼容端点建议 true；官方 AWS 虚拟主机风格可改 false
       path-style-access: true
       create-bucket-if-absent: true
-    # 向量库 Milvus（可选集成，本地联调默认开启；无服务时可改 false）
+    # 向量库 Milvus（可选集成；本环境要求鉴权，username/password 必填）
     milvus:
       enabled: true
       uri: http://127.0.0.1:19530
       database: default
       # token: # 与 username/password 二选一，优先 token
-      # username:
-      # password:
+      username: root
+      password: infra123!
       connect-timeout-ms: 10000
       ping-on-startup: true
 

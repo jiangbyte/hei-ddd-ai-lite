@@ -1,0 +1,27 @@
+# 公共配置：MCP 元数据 + 文件系统沙箱
+# 协议由 profile 决定：默认 sse，也可用 --spring.profiles.active=stdio
+
+spring:
+  application:
+    name: ai-mcp-demo
+  profiles:
+    default: sse
+  ai:
+    mcp:
+      server:
+        name: ai-mcp-demo
+        version: 1.0.0
+        type: SYNC
+        capabilities:
+          tool: true
+          resource: false
+          prompt: false
+          completion: false
+
+# 工具沙箱：只能访问这些根目录及其子路径
+# 覆盖示例：--ai.mcp.filesystem.roots=/tmp/sandbox
+ai:
+  mcp:
+    filesystem:
+      roots:
+        - ${user.home}
