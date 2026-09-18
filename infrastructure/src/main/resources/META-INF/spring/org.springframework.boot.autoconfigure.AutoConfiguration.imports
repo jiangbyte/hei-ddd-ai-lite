@@ -1,0 +1,5 @@
+io.github.jiangbyte.hei.infrastructure.config.datasource.DatasourceAutoConfiguration
+io.github.jiangbyte.hei.infrastructure.config.mybatis.MybatisPlusAutoConfiguration
+io.github.jiangbyte.hei.infrastructure.config.redis.RedisAutoConfigure
+io.github.jiangbyte.hei.infrastructure.config.s3.S3AutoConfiguration
+io.github.jiangbyte.hei.infrastructure.config.milvus.MilvusAutoConfiguration
