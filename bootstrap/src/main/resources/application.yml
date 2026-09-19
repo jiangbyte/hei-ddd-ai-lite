@@ -7,15 +7,17 @@ server:
 spring:
   application:
     name: hei-ddd-ai-lite
-  # Spring AI：默认对接本机 Ollama（需已启动且已 pull 对应模型）
+  # Spring AI：对接 OpenAI（或兼容端点）；需设置 OPENAI_API_KEY
   ai:
-    ollama:
-      base-url: ${OLLAMA_BASE_URL:http://127.0.0.1:11434}
+    openai:
+      api-key: ${OPENAI_API_KEY:}
+      base-url: ${OPENAI_BASE_URL:https://api.openai.com}
       chat:
         options:
-          model: ${OLLAMA_CHAT_MODEL:qwen2.5:7b}
+          model: ${OPENAI_CHAT_MODEL:gpt-4o-mini}
       embedding:
-        model: ${OLLAMA_EMBEDDING_MODEL:bge-m3}
+        options:
+          model: ${OPENAI_EMBEDDING_MODEL:text-embedding-3-small}
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driver-class-name: com.mysql.cj.jdbc.Driver

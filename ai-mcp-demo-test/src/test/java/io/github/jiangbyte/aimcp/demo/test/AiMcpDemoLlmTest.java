@@ -28,26 +28,26 @@ import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
-import org.springframework.ai.ollama.OllamaChatModel;
-import org.springframework.ai.ollama.api.OllamaApi;
-import org.springframework.ai.ollama.api.OllamaChatOptions;
+import org.springframework.ai.openai.OpenAiChatModel;
+import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.tool.ToolCallback;
 
 /**
- * 用本机 Ollama 验证：MCP 工具能被识别，并能被模型正常调用。
+ * 用 OpenAI（或兼容端点）验证：MCP 工具能被识别，并能被模型正常调用。
  *
  * <h2>前置</h2>
  * <ul>
  *   <li>已 package ai-mcp-demo fat JAR</li>
- *   <li>Ollama 已启动并 pull {@link #CHAT_MODEL}</li>
+ *   <li>已设置 {@code OPENAI_API_KEY}（可选 {@code OPENAI_BASE_URL} / {@code OPENAI_CHAT_MODEL}）</li>
  *   <li>SSE 用例需另起 ai-mcp-demo（默认 sse + 同一沙箱）</li>
  * </ul>
  */
 @Slf4j
 class AiMcpDemoLlmTest {
 
-    static final String OLLAMA_BASE_URL = "http://127.0.0.1:11434";
-    static final String CHAT_MODEL = "qwen2.5:7b";
+    static final String API_KEY = envOr("OPENAI_API_KEY", "");
+    static final String BASE_URL = envOr("OPENAI_BASE_URL", "https://api.openai.com");
+    static final String CHAT_MODEL = envOr("OPENAI_CHAT_MODEL", "gpt-4o-mini");
     static final String SSE_BASE_URL = "http://127.0.0.1:8101";
     static final Path SANDBOX_ROOT = Path.of("/tmp/ai-mcp-demo-sandbox");
     static final Duration MCP_TIMEOUT = Duration.ofSeconds(120);
@@ -67,7 +67,7 @@ class AiMcpDemoLlmTest {
     @Test
     @DisplayName("STDIO+LLM：ChatModel.call 识别全部工具名")
     void test_stdio_llm_chat_model_lists_all_tools() throws Exception {
-        assumeOllama();
+        assumeOpenAi();
         Path jar = requireDemoJar();
         prepareSandbox();
 
@@ -77,13 +77,13 @@ class AiMcpDemoLlmTest {
             assertToolDefinitions(tools);
 
             // 2. 参考写法：Prompt + ChatModel.call，工具挂在 ChatOptions.toolCallbacks
-            ChatModel chatModel = ollamaChatModel();
+            ChatModel chatModel = openAiChatModel();
             Prompt prompt = Prompt.builder()
                     .messages(new UserMessage("""
                             有哪些工具可以使用
                             请用英文原名列出全部可用工具，不要编造，不要只写中文描述。
                             """))
-                    .chatOptions(OllamaChatOptions.builder()
+                    .chatOptions(OpenAiChatOptions.builder()
                             .model(CHAT_MODEL)
                             .toolCallbacks(tools)
                             .build())
@@ -106,7 +106,7 @@ class AiMcpDemoLlmTest {
     @Test
     @DisplayName("STDIO+LLM：调用 list_allowed_directories")
     void test_stdio_llm_calls_list_allowed_directories() throws Exception {
-        assumeOllama();
+        assumeOpenAi();
         Path jar = requireDemoJar();
         prepareSandbox();
 
@@ -136,7 +136,7 @@ class AiMcpDemoLlmTest {
     @Test
     @DisplayName("STDIO+LLM：调用 read_text_file")
     void test_stdio_llm_calls_read_text_file() throws Exception {
-        assumeOllama();
+        assumeOpenAi();
         Path jar = requireDemoJar();
         prepareSandbox();
 
@@ -165,7 +165,7 @@ class AiMcpDemoLlmTest {
     @Test
     @DisplayName("STDIO+LLM：调用 list_directory")
     void test_stdio_llm_calls_list_directory() throws Exception {
-        assumeOllama();
+        assumeOpenAi();
         Path jar = requireDemoJar();
         prepareSandbox();
 
@@ -192,7 +192,7 @@ class AiMcpDemoLlmTest {
     @Test
     @DisplayName("STDIO+LLM：调用 write_file")
     void test_stdio_llm_calls_write_file() throws Exception {
-        assumeOllama();
+        assumeOpenAi();
         Path jar = requireDemoJar();
         prepareSandbox();
 
@@ -223,7 +223,7 @@ class AiMcpDemoLlmTest {
     @Test
     @DisplayName("SSE+LLM：调用 read_text_file")
     void test_sse_llm_calls_read_text_file() throws Exception {
-        assumeOllama();
+        assumeOpenAi();
         assumeTrue(sseReachable(SSE_BASE_URL), () ->
                 "SSE 不可达: " + SSE_BASE_URL + "，请先启动 ai-mcp-demo（默认 sse）");
         prepareSandbox();
@@ -246,15 +246,18 @@ class AiMcpDemoLlmTest {
         }
     }
 
-    private ChatModel ollamaChatModel() {
-        return OllamaChatModel.builder()
-                .ollamaApi(OllamaApi.builder().baseUrl(OLLAMA_BASE_URL).build())
-                .options(OllamaChatOptions.builder().model(CHAT_MODEL).build())
+    private ChatModel openAiChatModel() {
+        return OpenAiChatModel.builder()
+                .options(OpenAiChatOptions.builder()
+                        .apiKey(API_KEY)
+                        .baseUrl(BASE_URL)
+                        .model(CHAT_MODEL)
+                        .build())
                 .build();
     }
 
     private ChatClient chatClient(ToolCallback[] tools) {
-        return ChatClient.builder(ollamaChatModel())
+        return ChatClient.builder(openAiChatModel())
                 .defaultSystem("你是助手。需要文件或目录信息时必须调用提供的工具，禁止编造文件内容。")
                 .defaultTools(tools)
                 .build();
@@ -312,9 +315,9 @@ class AiMcpDemoLlmTest {
         return jar;
     }
 
-    private void assumeOllama() {
-        assumeTrue(ollamaReachable(OLLAMA_BASE_URL), () ->
-                "Ollama 不可达: " + OLLAMA_BASE_URL + "，请先启动并 ollama pull " + CHAT_MODEL);
+    private void assumeOpenAi() {
+        assumeTrue(API_KEY != null && !API_KEY.isBlank(), () ->
+                "未设置 OPENAI_API_KEY，跳过 LLM 用例（模型=" + CHAT_MODEL + "）");
     }
 
     private void prepareSandbox() throws Exception {
@@ -324,18 +327,9 @@ class AiMcpDemoLlmTest {
         assertFalse(Files.readString(hello).isBlank());
     }
 
-    private static boolean ollamaReachable(String baseUrl) {
-        try {
-            HttpURLConnection conn = (HttpURLConnection) URI.create(baseUrl + "/api/tags").toURL().openConnection();
-            conn.setConnectTimeout(1500);
-            conn.setReadTimeout(1500);
-            conn.setRequestMethod("GET");
-            int code = conn.getResponseCode();
-            conn.disconnect();
-            return code > 0 && code < 500;
-        } catch (Exception e) {
-            return false;
-        }
+    private static String envOr(String name, String defaultValue) {
+        String value = System.getenv(name);
+        return value == null || value.isBlank() ? defaultValue : value.trim();
     }
 
     private static boolean sseReachable(String baseUrl) {

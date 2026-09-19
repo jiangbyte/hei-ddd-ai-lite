@@ -30,24 +30,22 @@ import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.mcp.SyncMcpToolCallbackProvider;
-import org.springframework.ai.ollama.OllamaChatModel;
-import org.springframework.ai.ollama.OllamaEmbeddingModel;
-import org.springframework.ai.ollama.api.OllamaApi;
-import org.springframework.ai.ollama.api.OllamaChatOptions;
-import org.springframework.ai.ollama.api.OllamaEmbeddingOptions;
+import org.springframework.ai.openai.OpenAiChatModel;
+import org.springframework.ai.openai.OpenAiChatOptions;
+import org.springframework.ai.openai.OpenAiEmbeddingModel;
+import org.springframework.ai.openai.OpenAiEmbeddingOptions;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.SimpleVectorStore;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.ai.vectorstore.milvus.MilvusVectorStore;
 
 /**
- * AI 基础能力冒烟测试（单文件，对接本地 Ollama）。
+ * AI 基础能力冒烟测试（单文件，对接 OpenAI 或兼容端点）。
  *
  * <h2>怎么跑</h2>
  * <pre>
- *   # 需已启动 Ollama，并 pull 对话/向量模型，例如：
- *   #   ollama pull qwen2.5:7b
- *   #   ollama pull bge-m3
+ *   # 需设置 OPENAI_API_KEY；可选 OPENAI_BASE_URL / OPENAI_CHAT_MODEL / OPENAI_EMBEDDING_MODEL
+ *   export OPENAI_API_KEY=sk-...
  *   export JAVA_HOME=/path/to/jdk-21
  *   mvn -pl bootstrap -Dtest=AiAgentTest#test_call test
  *   # 或 IDE 中直接点方法旁的绿色三角
@@ -55,8 +53,8 @@ import org.springframework.ai.vectorstore.milvus.MilvusVectorStore;
  *
  * <h2>先改这些常量（按运行环境）</h2>
  * <ul>
- *   <li>{@link #BASE_URL} / {@link #CHAT_MODEL} / {@link #EMBEDDING_MODEL}
- *       — Ollama 服务地址与模型名；所有对话与向量化都用它们</li>
+ *   <li>{@link #API_KEY} / {@link #BASE_URL} / {@link #CHAT_MODEL} / {@link #EMBEDDING_MODEL}
+ *       — OpenAI API Key、服务地址与模型名；所有对话与向量化都用它们</li>
  *   <li>{@link #MILVUS_HOST} / {@link #MILVUS_PORT} / {@link #MILVUS_USERNAME}
  *       / {@link #MILVUS_PASSWORD} / {@link #MILVUS_COLLECTION}
  *       — 仅 {@link #test_milvus()} 需要；Milvus 需已启动且开启鉴权</li>
@@ -78,14 +76,16 @@ import org.springframework.ai.vectorstore.milvus.MilvusVectorStore;
 @Slf4j
 class AiAgentTest {
 
-    // ========================= 可调参数（Ollama） =========================
+    // ========================= 可调参数（OpenAI） =========================
 
-    /** Ollama 服务根地址 */
-    static final String BASE_URL = "http://127.0.0.1:11434";
-    /** 对话模型名（ollama list /api/tags 可见） */
-    static final String CHAT_MODEL = "qwen2.5:7b";
-    /** 向量模型名；维度需与 {@link #EMBEDDING_DIM} 一致（bge-m3 默认 1024） */
-    static final String EMBEDDING_MODEL = "bge-m3";
+    /** OpenAI API Key（优先读环境变量 OPENAI_API_KEY） */
+    static final String API_KEY = envOr("OPENAI_API_KEY", "");
+    /** OpenAI 或兼容端点根地址 */
+    static final String BASE_URL = envOr("OPENAI_BASE_URL", "https://api.openai.com");
+    /** 对话模型名 */
+    static final String CHAT_MODEL = envOr("OPENAI_CHAT_MODEL", "gpt-4o-mini");
+    /** 向量模型名；维度需与 {@link #EMBEDDING_DIM} 一致（text-embedding-3-small 默认 1536） */
+    static final String EMBEDDING_MODEL = envOr("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small");
 
     // ========================= 可调参数（Milvus，仅 test_milvus） =========================
 
@@ -102,9 +102,9 @@ class AiAgentTest {
      */
     static final String MILVUS_PASSWORD = "infra123!";
     /** 测试用集合名；不存在且 initializeSchema=true 时会自动建（维度变更后勿复用旧集合） */
-    static final String MILVUS_COLLECTION = "hei_ai_agent_test_ollama";
+    static final String MILVUS_COLLECTION = "hei_ai_agent_test_openai";
     /** 向量维度，需与 EMBEDDING_MODEL 输出一致 */
-    static final int EMBEDDING_DIM = 1024;
+    static final int EMBEDDING_DIM = 1536;
 
     // ========================= 可调参数（MCP，仅 test_mcp） =========================
 
@@ -132,20 +132,26 @@ class AiAgentTest {
     /**
      * 每个用例前准备：ChatModel、EmbeddingModel、内存向量库、带记忆+RAG 的 ChatClient。
      * <p>
-     * 使用参数：{@link #BASE_URL}、{@link #CHAT_MODEL}、{@link #EMBEDDING_MODEL}、
+     * 使用参数：{@link #API_KEY}、{@link #BASE_URL}、{@link #CHAT_MODEL}、{@link #EMBEDDING_MODEL}、
      * {@link #MEMORY_MAX_MESSAGES}、{@link #RAG_TOP_K}、{@link #DEMO_DOC_TEXT}。
      */
     @BeforeEach
     void init() {
-        // 1. 构建 Ollama API 与对话 / 向量模型
-        OllamaApi ollamaApi = OllamaApi.builder().baseUrl(BASE_URL).build();
-        chatModel = OllamaChatModel.builder()
-                .ollamaApi(ollamaApi)
-                .options(OllamaChatOptions.builder().model(CHAT_MODEL).build())
+        // 1. 构建 OpenAI 对话 / 向量模型（apiKey、baseUrl、model 写在 options 上）
+        chatModel = OpenAiChatModel.builder()
+                .options(OpenAiChatOptions.builder()
+                        .apiKey(API_KEY)
+                        .baseUrl(BASE_URL)
+                        .model(CHAT_MODEL)
+                        .build())
                 .build();
-        embeddingModel = OllamaEmbeddingModel.builder()
-                .ollamaApi(ollamaApi)
-                .options(OllamaEmbeddingOptions.builder().model(EMBEDDING_MODEL).build())
+        embeddingModel = OpenAiEmbeddingModel.builder()
+                .options(OpenAiEmbeddingOptions.builder()
+                        .apiKey(API_KEY)
+                        .baseUrl(BASE_URL)
+                        .model(EMBEDDING_MODEL)
+                        .dimensions(EMBEDDING_DIM)
+                        .build())
                 .build();
 
         // 2. 内存向量库写入一条演示知识（会调用 Embedding API）
@@ -163,6 +169,11 @@ class AiAgentTest {
                                 .build(),
                         SimpleLoggerAdvisor.builder().build())
                 .build();
+    }
+
+    private static String envOr(String name, String defaultValue) {
+        String value = System.getenv(name);
+        return value == null || value.isBlank() ? defaultValue : value.trim();
     }
 
     /**

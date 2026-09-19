@@ -85,10 +85,10 @@
             <artifactId>milvus-sdk-java</artifactId>
         </dependency>
 
-        <!-- Spring AI 2：Ollama 模型 starter（版本由父 POM spring-ai-bom 管理） -->
+        <!-- Spring AI 2：OpenAI 模型 starter（版本由父 POM spring-ai-bom 管理） -->
         <dependency>
             <groupId>org.springframework.ai</groupId>
-            <artifactId>spring-ai-starter-model-ollama</artifactId>
+            <artifactId>spring-ai-starter-model-openai</artifactId>
         </dependency>
     </dependencies>
 </project>

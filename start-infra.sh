@@ -3,13 +3,12 @@
 set -euo pipefail
 
 # 1. 后端默认依赖：MySQL / Redis（已在跑则 docker start 无副作用）
-# 2. S3 兼容、向量库、Ollama、Milvus UI
+# 2. S3 兼容、向量库、Milvus UI（LLM 走 OpenAI，不再启 ollama）
 CONTAINERS=(
   mysql
   redis
   silo
   milvus
-  ollama
   attu
 )
 
@@ -22,5 +21,4 @@ docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}' \
   --filter name=redis \
   --filter name=silo \
   --filter name=milvus \
-  --filter name=ollama \
   --filter name=attu
