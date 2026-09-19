@@ -22,7 +22,7 @@
 ## 准备
 
 ```bash
-# 后端先就绪：执行 docs/sql/schema-user.sql，启动 bootstrap（默认 8080）
+# 后端先就绪：执行 docs/sql/schema-user.sql，启动 hei-ddd-lite-app（默认 8080）
 
 cd web
 pnpm install

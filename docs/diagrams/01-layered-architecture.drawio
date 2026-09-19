@@ -1,41 +1,53 @@
 <mxfile host="app.diagrams.net" agent="hei-ddd-ai-lite" version="22.1.0">
-  <diagram id="layered" name="分层架构">
-    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="700" math="0" shadow="0">
+  <diagram id="layered" name="六层工程模型">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="720" math="0" shadow="0">
       <root>
         <mxCell id="0"/>
         <mxCell id="1" parent="0"/>
-        <mxCell id="t" value="hei-ddd-ai-lite 分层与依赖方向（不可反向）" style="text;html=1;fontSize=16;fontStyle=1;align=center;" vertex="1" parent="1">
-          <mxGeometry x="280" y="20" width="420" height="30" as="geometry"/>
+        <mxCell id="t" value="常见六层工程模型与依赖方向（不可反向）" style="text;html=1;fontSize=16;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="260" y="16" width="480" height="30" as="geometry"/>
         </mxCell>
-        <mxCell id="boot" value="bootstrap&#xa;启动组装 / 组件扫描" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
-          <mxGeometry x="360" y="70" width="260" height="60" as="geometry"/>
+        <mxCell id="app" value="app&#xa;启动组装 / 组件扫描" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="360" y="60" width="260" height="56" as="geometry"/>
         </mxCell>
-        <mxCell id="iface" value="interfaces&#xa;Controller / DTO / Assembler / JWT" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
-          <mxGeometry x="360" y="170" width="260" height="60" as="geometry"/>
+        <mxCell id="trig" value="trigger&#xa;Controller / Assembler / JWT" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="360" y="150" width="260" height="56" as="geometry"/>
         </mxCell>
-        <mxCell id="app" value="application&#xa;ApplicationService / Command / Query" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
-          <mxGeometry x="360" y="270" width="260" height="60" as="geometry"/>
+        <mxCell id="api" value="api&#xa;I*Service / Request / Response / R" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="80" y="150" width="220" height="56" as="geometry"/>
         </mxCell>
-        <mxCell id="dom" value="domain&#xa;Entity / VO / Aggregate / Event / Ports" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
-          <mxGeometry x="360" y="370" width="260" height="70" as="geometry"/>
+        <mxCell id="types" value="types&#xa;BizException / ResponseCode" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="80" y="250" width="220" height="56" as="geometry"/>
+        </mxCell>
+        <mxCell id="dom" value="domain&#xa;模型 + 用例编排（application 包）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="360" y="250" width="260" height="70" as="geometry"/>
         </mxCell>
         <mxCell id="infra" value="infrastructure&#xa;RepositoryImpl / EventPublisher / AutoConfig" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
-          <mxGeometry x="700" y="270" width="280" height="70" as="geometry"/>
+          <mxGeometry x="700" y="150" width="280" height="70" as="geometry"/>
         </mxCell>
-        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;" edge="1" parent="1" source="boot" target="iface">
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;" edge="1" parent="1" source="app" target="trig">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;" edge="1" parent="1" source="iface" target="app">
+        <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;" edge="1" parent="1" source="trig" target="api">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;" edge="1" parent="1" source="app" target="dom">
+        <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;" edge="1" parent="1" source="api" target="types">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;" edge="1" parent="1" source="boot" target="infra">
+        <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;" edge="1" parent="1" source="trig" target="dom">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="e5" value="实现端口" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;endArrow=block;" edge="1" parent="1" source="infra" target="dom">
+        <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;" edge="1" parent="1" source="dom" target="types">
           <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;" edge="1" parent="1" source="app" target="infra">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e7" value="实现端口" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;endArrow=block;" edge="1" parent="1" source="infra" target="dom">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="note" value="app → trigger → api → types；trigger → domain → types；app → infrastructure → domain" style="text;html=1;fontSize=12;align=left;fontColor=#444444;" vertex="1" parent="1">
+          <mxGeometry x="80" y="360" width="900" height="24" as="geometry"/>
         </mxCell>
       </root>
     </mxGraphModel>

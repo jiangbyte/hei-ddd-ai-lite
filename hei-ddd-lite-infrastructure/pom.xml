@@ -10,18 +10,14 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>infrastructure</artifactId>
-    <name>infrastructure</name>
+    <artifactId>hei-ddd-lite-infrastructure</artifactId>
+    <name>hei-ddd-lite-infrastructure</name>
     <description>基础设施层：MySQL/Redis 默认集成、S3/Milvus 等与仓储实现</description>
 
     <dependencies>
         <dependency>
             <groupId>io.github.jiangbyte</groupId>
-            <artifactId>domain</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.github.jiangbyte</groupId>
-            <artifactId>application</artifactId>
+            <artifactId>hei-ddd-lite-domain</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

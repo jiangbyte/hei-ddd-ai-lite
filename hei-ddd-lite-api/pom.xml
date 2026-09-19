@@ -10,14 +10,14 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>api</artifactId>
-    <name>api</name>
+    <artifactId>hei-ddd-lite-api</artifactId>
+    <name>hei-ddd-lite-api</name>
     <description>对外 API 契约：接口定义与 DTO（无领域/应用依赖）</description>
 
     <dependencies>
         <dependency>
             <groupId>io.github.jiangbyte</groupId>
-            <artifactId>types</artifactId>
+            <artifactId>hei-ddd-lite-types</artifactId>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>

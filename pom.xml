@@ -16,16 +16,15 @@
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>hei-ddd-ai-lite</name>
-    <description>个人 AI demo 开发脚手架：DDD 分层 + Spring AI + 账户体系 + Vue 前后台</description>
+    <description>个人 AI demo 开发脚手架：常见六层工程模型 + Spring AI + 账户体系 + Vue 前后台</description>
 
     <modules>
-        <module>types</module>
-        <module>domain</module>
-        <module>api</module>
-        <module>application</module>
-        <module>interfaces</module>
-        <module>infrastructure</module>
-        <module>bootstrap</module>
+        <module>hei-ddd-lite-types</module>
+        <module>hei-ddd-lite-api</module>
+        <module>hei-ddd-lite-trigger</module>
+        <module>hei-ddd-lite-domain</module>
+        <module>hei-ddd-lite-infrastructure</module>
+        <module>hei-ddd-lite-app</module>
     </modules>
 
     <properties>
@@ -60,35 +59,35 @@
                 <scope>import</scope>
             </dependency>
 
-            <!-- 内部模块 -->
+            <!-- 内部模块：常见六层工程模型（types / api / trigger / domain / infrastructure / app） -->
             <dependency>
                 <groupId>io.github.jiangbyte</groupId>
-                <artifactId>types</artifactId>
+                <artifactId>hei-ddd-lite-types</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.github.jiangbyte</groupId>
-                <artifactId>domain</artifactId>
+                <artifactId>hei-ddd-lite-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.github.jiangbyte</groupId>
-                <artifactId>api</artifactId>
+                <artifactId>hei-ddd-lite-trigger</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.github.jiangbyte</groupId>
-                <artifactId>application</artifactId>
+                <artifactId>hei-ddd-lite-domain</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.github.jiangbyte</groupId>
-                <artifactId>interfaces</artifactId>
+                <artifactId>hei-ddd-lite-infrastructure</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.github.jiangbyte</groupId>
-                <artifactId>infrastructure</artifactId>
+                <artifactId>hei-ddd-lite-app</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
