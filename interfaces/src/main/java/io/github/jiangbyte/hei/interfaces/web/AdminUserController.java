@@ -16,9 +16,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -28,7 +26,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 后台用户管理接口（需 ADMIN）。
+ * 后台用户管理接口（需 ADMIN）：分页列表、创建、启用/禁用。
+ * <p>
+ * 作为脚手架 DDD 竖切的 Web 示例：组装 Command/Query，委托应用服务，经 Assembler 输出。
  */
 @Tag(name = "后台用户")
 @SecurityRequirement(name = OpenApiConfiguration.BEARER_AUTH)
@@ -41,6 +41,9 @@ public class AdminUserController {
     private final AdminUserApplicationService adminUserApplicationService;
     private final UserAssembler userAssembler;
 
+    /**
+     * 分页查询用户（query：pageNo / pageSize / username / userType）。
+     */
     @GetMapping
     public R<PageResponse<UserProfileResponse>> list(
             @RequestParam(defaultValue = "1") int pageNo,
@@ -52,8 +55,14 @@ public class AdminUserController {
                 adminUserApplicationService.listUsers(new ListUsersQuery(pageNo, pageSize, username, type))));
     }
 
+    /**
+     * 创建用户（body：username / password / userType）。
+     */
     @PostMapping
     public R<Map<String, Object>> create(@RequestBody CreateUserRequest request) {
+        if (request == null) {
+            throw new BizException("VALIDATION_ERROR", "请求体不能为空");
+        }
         UserType type = parseOptionalType(request.getUserType());
         if (type == null) {
             type = UserType.PORTAL;
@@ -67,13 +76,23 @@ public class AdminUserController {
         return R.ok(data);
     }
 
-    @PutMapping("/{id}/enabled")
-    public R<UserProfileResponse> changeEnabled(@PathVariable Long id, @RequestBody ChangeEnabledRequest request) {
+    /**
+     * 变更启用状态（POST + body，避免 path 变量与 PUT）。
+     */
+    @PostMapping("/change-enabled")
+    public R<UserProfileResponse> changeEnabled(@RequestBody ChangeEnabledRequest request) {
+        if (request == null) {
+            throw new BizException("VALIDATION_ERROR", "请求体不能为空");
+        }
+        if (request.getUserId() == null) {
+            throw new BizException("VALIDATION_ERROR", "userId 不能为空");
+        }
         if (request.getEnabled() == null) {
             throw new BizException("VALIDATION_ERROR", "enabled 不能为空");
         }
         return R.ok(userAssembler.toProfileResponse(
-                adminUserApplicationService.changeEnabled(new ChangeUserEnabledCommand(id, request.getEnabled()))));
+                adminUserApplicationService.changeEnabled(
+                        new ChangeUserEnabledCommand(request.getUserId(), request.getEnabled()))));
     }
 
     private static UserType parseOptionalType(String userType) {
@@ -81,7 +100,7 @@ public class AdminUserController {
             return null;
         }
         try {
-            return UserType.from(userType);
+            return UserType.valueOf(userType.trim().toUpperCase());
         } catch (IllegalArgumentException ex) {
             throw new BizException("VALIDATION_ERROR", "userType 仅支持 PORTAL 或 ADMIN");
         }

@@ -36,7 +36,7 @@ hei-ddd-ai-lite/
 | domain | 实体/聚合、值对象、领域事件、仓储端口、工厂、规约、领域服务、领域异常 | Spring、HTTP、SQL |
 | application | 用例编排、事务边界、Command/Query、应用读模型 | 对外 API DTO、技术细节 |
 | interfaces | Controller、Response、Assembler、统一响应 `R`、`@RequireLogin` / `@RequireAdmin` / JWT | 业务规则、持久化 |
-| infrastructure | 仓储实现、事件发布、Druid / MyBatis-Plus / Redis 等 | 领域规则 |
+| infrastructure | 仓储实现、事件发布与消费、Druid / MyBatis-Plus / Redis 等 | 领域规则 |
 | bootstrap | 启动类、`application.yml`、组件扫描范围 | 业务逻辑 |
 
 依赖方向（**不可反向**）：
@@ -57,14 +57,14 @@ JWT / CORS 属于 **interfaces**；数据源 / MyBatis / Redis / S3 / Milvus 属
 | 抽象 | 包位置 | 扩展时怎么用 |
 |------|--------|----------------|
 | `Entity` | `domain.core` | 有标识、可变；按 ID 相等 |
-| `ValueObject` | `domain.core` | 不可变、按值相等；参考 `Greeting` |
+| `ValueObject` | `domain.core` | 不可变、按值相等；参考 `Username` |
 | `AggregateRoot` | `domain.core` | 继承它；行为内 `registerEvent` |
-| `DomainEvent` | `domain.core` | 不可变事实；参考 `HelloCreatedEvent` |
+| `DomainEvent` | `domain.core` | 不可变事实；参考 `UserCreatedEvent` |
 | `DomainEventPublisher` | `domain.core` | 领域端口；infra 提供 `SpringDomainEventPublisher` |
 | `Repository` | `domain.core` | 以聚合为粒度；端口在 domain，实现在 infra |
-| `Factory` | `domain.core` | 创建合法聚合；参考 `HelloFactory` |
-| `Specification` | `domain.core` | 可复用判定；参考 `GreetingNotBlankSpecification` |
-| `DomainService` | `domain.core` | 跨聚合无状态规则；单聚合行为放聚合根 |
+| `Factory` | `domain.core` | 创建合法聚合；参考 `UserFactory` |
+| `Specification` | `domain.core` | 可复用判定；参考 `UsernameFormatSpecification` |
+| `DomainService` | `domain.core` / `domain.service` | 跨聚合无状态规则；参考 `UserClientAccessPolicy`（application `@Bean` 装配） |
 | `ApplicationService` | `application.core` | 编排用例 + `@Transactional` |
 | `Command` / `Query` | `application.core` | 写/读用例入参 |
 
@@ -87,8 +87,10 @@ JWT / CORS 属于 **interfaces**；数据源 / MyBatis / Redis / S3 / Milvus 属
 | POST | `/auth/login` | 登录（body 需 `clientType`: `PORTAL` / `ADMIN`） |
 | POST | `/auth/logout` | 登出（JWT 进 Redis 黑名单） |
 | GET | `/auth/me` | 当前登录用户（需登录） |
-| GET | `/users/{id}` | 公开资料（启用中的 PORTAL） |
-| GET/POST | `/admin/users` | 后台用户管理（需 ADMIN） |
+| GET | `/users/public?userId=` | 公开资料（启用中的 PORTAL） |
+| GET | `/admin/users` | 后台用户分页（需 ADMIN） |
+| POST | `/admin/users` | 后台创建用户（需 ADMIN） |
+| POST | `/admin/users/change-enabled` | 启用/禁用（需 ADMIN） |
 
 建表脚本：[`docs/sql/schema-user.sql`](docs/sql/schema-user.sql)  
 默认管理员：`admin` / `admin123`
@@ -101,14 +103,15 @@ JWT / CORS 属于 **interfaces**；数据源 / MyBatis / Redis / S3 / Milvus 属
 
 ![用例扩展](docs/diagrams/03-usecase-extension.svg)
 
-按 Hello 占位竖切复制，或在其上扩展 Agent / 会话等 AI demo 能力：
+按**用户管理**竖切（`User` / `UserFactory` / `UserClientAccessPolicy` /
+`AuthApplicationService` / `AdminUserApplicationService`）复制扩展，或在其上增加 Agent / 会话等 AI demo 能力：
 
-1. **领域模型**（`domain.model`）：新建聚合继承 `AggregateRoot`，值对象实现 `ValueObject`。
-2. **Factory / Event / Spec**（`domain.factory` / `event` / `specification`）：创建时校验并登记创建事件。
-3. **Repository 端口**（`domain.repository`）：`XxxRepository extends Repository<Xxx, ID>`。
-4. **应用服务**（`application`）：`CreateXxxCommand` / `GetXxxQuery` + `XxxApplicationService`（事务边界）。
-5. **基础设施**（`infrastructure.persistence` / `event`）：实现仓储与事件发布；对接 Spring AI 客户端等。
-6. **接口**（`interfaces.web`）：Controller + Assembler + Response。
+1. **领域模型**（`domain.model`）：新建聚合继承 `AggregateRoot`，值对象实现 `ValueObject`（参考 `Username`）。
+2. **Factory / Event / Spec / DomainService**（`domain.factory` / `event` / `specification` / `service`）：创建时校验、登记事件、跨聚合规则（参考 `UserFactory`、`UserCreatedEvent`、`UsernameFormatSpecification`、`UserClientAccessPolicy`）。
+3. **Repository 端口**（`domain.repository`）：`XxxRepository extends Repository<Xxx, ID>`（参考 `UserRepository`）。
+4. **应用服务**（`application`）：`CreateXxxCommand` / `GetXxxQuery` + `XxxApplicationService`（事务边界；保存后 `pullDomainEvents` 发布）；无 Spring 的领域服务用 `@Bean` 装配（参考 `UserDomainConfiguration`）。
+5. **基础设施**（`infrastructure.persistence` / `event`）：实现仓储、事件发布与 `@EventListener` 消费（参考 `UserDomainEventListener`）；对接 Spring AI 客户端等。
+6. **接口**（`interfaces.web`）：Controller + Assembler + Response（参考 `AdminUserController` / `AuthController`）。
 7. **启动**：若新增需扫描的 infra 包，更新 `HeiDddAiLiteApplication` 的 `scanBasePackages`。
 
 ### 领域事件约定
@@ -119,6 +122,7 @@ JWT / CORS 属于 **interfaces**；数据源 / MyBatis / Redis / S3 / Milvus 属
 2. 应用服务 `repository.save(aggregate)`。
 3. `aggregate.pullDomainEvents()` 取出并清空。
 4. `domainEventPublisher.publish(events)`。
+5. 基础设施 `@EventListener` 消费（参考 `UserDomainEventListener`）。
 
 事务边界在**应用服务**；默认同步 Spring 事件发布，可替换为 Outbox / MQ。
 
@@ -126,7 +130,7 @@ JWT / CORS 属于 **interfaces**；数据源 / MyBatis / Redis / S3 / Milvus 属
 
 - **Factory**：构造复杂或必须保证不变式的聚合创建。
 - **Specification**：多处复用的业务判定，避免散落 if。
-- **DomainService**：规则不属于单一聚合（跨聚合协作），且仍是纯领域逻辑。
+- **DomainService**：规则不属于单一聚合（如端类型访问策略），且仍是纯领域逻辑；domain 无 Spring，由 application `@Bean` 注册。
 
 ---
 
@@ -163,12 +167,6 @@ curl -s -X POST http://127.0.0.1:8080/auth/login \
 ```
 
 后台管理员登录将 `clientType` 改为 `ADMIN`。
-
-Hello 占位仍可用：
-
-```bash
-curl http://127.0.0.1:8080/hello
-```
 
 ### 前端
 

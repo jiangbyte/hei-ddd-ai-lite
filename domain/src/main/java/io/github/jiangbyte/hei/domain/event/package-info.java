@@ -7,6 +7,7 @@
  * <b>不放什么</b>：事件监听器、消息中间件客户端（放 infrastructure）。
  *
  * <p><b>如何扩展</b>：聚合行为内 {@code registerEvent}；应用服务在 {@code save} 后
- * {@code pullDomainEvents} 并交给 {@code DomainEventPublisher}。
+ * {@code pullDomainEvents} 并交给 {@code DomainEventPublisher}；消费在
+ * {@code infrastructure.event}（如 {@code UserDomainEventListener}）。
  */
 package io.github.jiangbyte.hei.domain.event;

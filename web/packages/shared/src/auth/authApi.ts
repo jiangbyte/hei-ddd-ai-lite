@@ -32,8 +32,8 @@ export function createAuthApi(http: AxiosInstance) {
     me() {
       return http.get<any, UserProfile>('/auth/me')
     },
-    getPublicUser(id: number | string) {
-      return http.get<any, PublicUser>(`/users/${id}`)
+    getPublicUser(userId: number | string) {
+      return http.get<any, PublicUser>('/users/public', { params: { userId } })
     },
   }
 }
@@ -46,8 +46,8 @@ export function createAdminUserApi(http: AxiosInstance) {
     create(payload: CreateUserPayload) {
       return http.post<any, { userId: number; username: string; userType: UserType }>('/admin/users', payload)
     },
-    changeEnabled(id: number, enabled: boolean) {
-      return http.put<any, UserProfile>(`/admin/users/${id}/enabled`, { enabled })
+    changeEnabled(userId: number, enabled: boolean) {
+      return http.post<any, UserProfile>('/admin/users/change-enabled', { userId, enabled })
     },
   }
 }

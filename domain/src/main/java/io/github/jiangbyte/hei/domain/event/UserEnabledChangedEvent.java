@@ -7,18 +7,18 @@ import java.time.OffsetDateTime;
 import java.util.Objects;
 
 /**
- * Hello 聚合已创建事件。
+ * 用户启用状态已变更事件。
  */
 @Getter
-public final class HelloCreatedEvent implements DomainEvent {
+public final class UserEnabledChangedEvent implements DomainEvent {
 
-    private final Long helloId;
-    private final String greetingText;
+    private final Long userId;
+    private final boolean enabled;
     private final OffsetDateTime occurredAt;
 
-    public HelloCreatedEvent(Long helloId, String greetingText) {
-        this.helloId = Objects.requireNonNull(helloId, "helloId");
-        this.greetingText = greetingText;
+    public UserEnabledChangedEvent(Long userId, boolean enabled) {
+        this.userId = Objects.requireNonNull(userId, "userId");
+        this.enabled = enabled;
         this.occurredAt = OffsetDateTime.now();
     }
 
@@ -29,6 +29,6 @@ public final class HelloCreatedEvent implements DomainEvent {
 
     @Override
     public String aggregateId() {
-        return String.valueOf(helloId);
+        return String.valueOf(userId);
     }
 }

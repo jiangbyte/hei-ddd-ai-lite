@@ -1,9 +1,11 @@
 /**
- * Web 适配：Controller 接收 HTTP，调用应用服务，返回统一响应。
+ * Web 接口：HTTP 适配，不写业务规则。
  *
- * <p><b>放什么</b>：RestController。
- * <b>不放什么</b>：领域规则、SQL、事务编排（事务在应用服务）。
+ * <p><b>放什么</b>：Controller、Request/Response、Assembler。
  *
- * <p><b>如何扩展</b>：复制 {@code HelloController}——组装 Command/Query，委托应用服务，经 Assembler 输出。
+ * <p><b>不放什么</b>：领域逻辑、直接访问 Mapper。
+ *
+ * <p><b>如何扩展</b>：复制 {@code AdminUserController} /
+ * {@code AuthController}——组装 Command/Query，委托应用服务，经 Assembler 输出。
  */
 package io.github.jiangbyte.hei.interfaces.web;

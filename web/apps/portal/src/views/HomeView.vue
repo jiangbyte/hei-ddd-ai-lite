@@ -34,7 +34,7 @@ const router = useRouter()
           <ul class="tips">
             <li>公开注册只会创建 PORTAL 前台用户</li>
             <li>后台 ADMIN 账号不能在此登录</li>
-            <li>公开资料路径：/users/:id</li>
+            <li>公开资料路径：/users/:id（接口 GET /users/public?userId=）</li>
           </ul>
         </NCard>
       </NGi>

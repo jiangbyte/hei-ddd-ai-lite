@@ -2,6 +2,8 @@ package io.github.jiangbyte.hei.domain.model;
 
 import io.github.jiangbyte.hei.domain.core.AggregateRoot;
 import io.github.jiangbyte.hei.domain.core.DomainException;
+import io.github.jiangbyte.hei.domain.event.UserCreatedEvent;
+import io.github.jiangbyte.hei.domain.event.UserEnabledChangedEvent;
 import io.github.jiangbyte.hei.domain.port.PasswordHasher;
 import lombok.Getter;
 
@@ -9,7 +11,7 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 
 /**
- * 用户聚合根：前台 / 后台账号，不含 RBAC。
+ * 用户聚合根：前台 / 后台账号（不含 RBAC），作为脚手架 DDD 竖切示例。
  */
 @Getter
 public class User extends AggregateRoot<Long> {
@@ -36,10 +38,10 @@ public class User extends AggregateRoot<Long> {
     }
 
     /**
-     * 创建用户（id 由持久化分配）。
+     * 创建用户（id 由持久化分配；创建事件在 {@link #markCreated()} 登记）。
      */
-    public static User create(String username, String passwordHash, UserType userType) {
-        if (username == null || username.isBlank()) {
+    public static User create(Username username, String passwordHash, UserType userType) {
+        if (username == null) {
             throw new DomainException("用户名不能为空");
         }
         if (passwordHash == null || passwordHash.isBlank()) {
@@ -49,11 +51,11 @@ public class User extends AggregateRoot<Long> {
             throw new DomainException("用户类型不能为空");
         }
         LocalDateTime now = LocalDateTime.now();
-        return new User(null, username.trim(), passwordHash, userType, true, now, now);
+        return new User(null, username.getValue(), passwordHash, userType, true, now, now);
     }
 
     /**
-     * 从持久化状态还原。
+     * 从持久化状态还原（不携带未发布事件）。
      */
     public static User restore(Long id, String username, String passwordHash, UserType userType,
                                boolean enabled, LocalDateTime createTime, LocalDateTime updateTime) {
@@ -61,13 +63,29 @@ public class User extends AggregateRoot<Long> {
     }
 
     /**
-     * 变更启用状态。
+     * 持久化分配 ID 后登记创建事件。
+     */
+    public void markCreated() {
+        // 1. 必须已有持久化标识
+        if (id == null) {
+            throw new DomainException("用户尚未持久化，无法登记创建事件");
+        }
+        // 2. 登记创建事实，供应用服务 pull 后发布
+        registerEvent(new UserCreatedEvent(id, username, userType));
+    }
+
+    /**
+     * 变更启用状态；有实际变更时登记领域事件。
      */
     public User changeEnabled(boolean enabled) {
+        // 1. 状态未变则返回自身，避免无意义写库与事件
         if (this.enabled == enabled) {
             return this;
         }
-        return new User(id, username, passwordHash, userType, enabled, createTime, LocalDateTime.now());
+        // 2. 构造新状态并登记变更事件
+        User next = new User(id, username, passwordHash, userType, enabled, createTime, LocalDateTime.now());
+        next.registerEvent(new UserEnabledChangedEvent(id, enabled));
+        return next;
     }
 
     /**
