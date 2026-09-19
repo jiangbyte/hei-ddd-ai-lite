@@ -1,22 +1,27 @@
 package io.github.jiangbyte.hei.interfaces.web;
 
+import io.github.jiangbyte.hei.api.IAuthService;
+import io.github.jiangbyte.hei.api.dto.AuthRequest;
+import io.github.jiangbyte.hei.api.response.AuthRegisterResponse;
+import io.github.jiangbyte.hei.api.response.AuthTokenResponse;
+import io.github.jiangbyte.hei.api.response.R;
+import io.github.jiangbyte.hei.api.response.UserProfileResponse;
 import io.github.jiangbyte.hei.application.AuthApplicationService;
 import io.github.jiangbyte.hei.application.command.LoginCommand;
 import io.github.jiangbyte.hei.application.command.RegisterUserCommand;
 import io.github.jiangbyte.hei.application.dto.AuthResultView;
 import io.github.jiangbyte.hei.application.query.GetMyProfileQuery;
-import io.github.jiangbyte.hei.domain.core.BizException;
 import io.github.jiangbyte.hei.domain.model.UserType;
 import io.github.jiangbyte.hei.interfaces.assembler.UserAssembler;
 import io.github.jiangbyte.hei.interfaces.config.OpenApiConfiguration;
-import io.github.jiangbyte.hei.interfaces.response.R;
-import io.github.jiangbyte.hei.interfaces.response.UserProfileResponse;
 import io.github.jiangbyte.hei.interfaces.security.AuthContext;
 import io.github.jiangbyte.hei.interfaces.security.JwtProperties;
 import io.github.jiangbyte.hei.interfaces.security.JwtTokenProvider;
 import io.github.jiangbyte.hei.interfaces.security.LoginUser;
 import io.github.jiangbyte.hei.interfaces.security.RequireLogin;
 import io.github.jiangbyte.hei.interfaces.security.UnauthorizedException;
+import io.github.jiangbyte.hei.types.enums.ResponseCode;
+import io.github.jiangbyte.hei.types.exception.BizException;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,10 +31,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * 认证接口：注册（前台）、登录（按端类型）、登出、当前用户。
@@ -38,49 +43,70 @@ import java.util.Map;
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
-public class AuthController {
+public class AuthController implements IAuthService {
 
     private final AuthApplicationService authApplicationService;
     private final JwtTokenProvider jwtTokenProvider;
     private final JwtProperties jwtProperties;
     private final UserAssembler userAssembler;
 
+    @Override
     @PostMapping("/register")
-    public R<Map<String, Object>> register(@RequestBody AuthRequest request) {
+    public R<AuthRegisterResponse> register(@RequestBody AuthRequest request) {
+        // 1. 委托应用服务注册
         AuthResultView result = authApplicationService.register(
                 new RegisterUserCommand(request.getUsername(), request.getPassword()));
-        return R.ok(authPayload(result, null));
+        // 2. 组装契约响应（无 Token）
+        return R.ok(AuthRegisterResponse.builder()
+                .userId(result.getUserId())
+                .username(result.getUsername())
+                .userType(result.getUserType().name())
+                .build());
     }
 
+    @Override
     @PostMapping("/login")
-    public R<Map<String, Object>> login(@RequestBody AuthRequest request) {
+    public R<AuthTokenResponse> login(@RequestBody AuthRequest request) {
+        // 1. 解析端类型并登录
         UserType clientType = parseClientType(request.getClientType());
         AuthResultView result = authApplicationService.login(
                 new LoginCommand(request.getUsername(), request.getPassword(), clientType));
+        // 2. 签发 JWT 并组装契约响应
         String token = jwtTokenProvider.createToken(
                 String.valueOf(result.getUserId()),
                 result.getUsername(),
                 result.getUserType().name());
-        Map<String, Object> data = authPayload(result, token);
-        data.put("tokenType", "Bearer");
-        data.put("expiresIn", jwtProperties.getExpireSeconds());
-        return R.ok(data);
+        return R.ok(AuthTokenResponse.builder()
+                .userId(result.getUserId())
+                .username(result.getUsername())
+                .userType(result.getUserType().name())
+                .token(token)
+                .tokenType("Bearer")
+                .expiresIn(jwtProperties.getExpireSeconds())
+                .build());
     }
 
+    @Override
     @RequireLogin
     @SecurityRequirement(name = OpenApiConfiguration.BEARER_AUTH)
     @PostMapping("/logout")
-    public R<Void> logout(HttpServletRequest request) {
+    public R<Void> logout() {
+        // 1. 从登录上下文取 jti
         LoginUser loginUser = AuthContext.get();
         if (loginUser == null || loginUser.getJti() == null) {
             throw new UnauthorizedException("未登录或 Token 无效");
         }
-        String token = jwtTokenProvider.resolveToken(request.getHeader(jwtProperties.getHeader()));
+        // 2. 从当前请求头解析 Token，计算剩余 TTL 后拉黑
+        HttpServletRequest request = currentRequest();
+        String token = request == null
+                ? null
+                : jwtTokenProvider.resolveToken(request.getHeader(jwtProperties.getHeader()));
         Duration ttl = token == null ? Duration.ZERO : jwtTokenProvider.remainingTtl(token);
         authApplicationService.logout(loginUser.getJti(), ttl);
         return R.ok();
     }
 
+    @Override
     @RequireLogin
     @SecurityRequirement(name = OpenApiConfiguration.BEARER_AUTH)
     @GetMapping("/me")
@@ -90,15 +116,12 @@ public class AuthController {
                 authApplicationService.getMyProfile(new GetMyProfileQuery(userId))));
     }
 
-    private Map<String, Object> authPayload(AuthResultView result, String token) {
-        Map<String, Object> data = new HashMap<>();
-        data.put("userId", result.getUserId());
-        data.put("username", result.getUsername());
-        data.put("userType", result.getUserType().name());
-        if (token != null) {
-            data.put("token", token);
+    private static HttpServletRequest currentRequest() {
+        var attrs = RequestContextHolder.getRequestAttributes();
+        if (attrs instanceof ServletRequestAttributes servletAttrs) {
+            return servletAttrs.getRequest();
         }
-        return data;
+        return null;
     }
 
     private static UserType parseClientType(String clientType) {
@@ -108,7 +131,7 @@ public class AuthController {
         try {
             return UserType.from(clientType);
         } catch (IllegalArgumentException ex) {
-            throw new BizException("VALIDATION_ERROR", "clientType 仅支持 PORTAL 或 ADMIN");
+            throw new BizException(ResponseCode.VALIDATION_ERROR, "clientType 仅支持 PORTAL 或 ADMIN");
         }
     }
 
@@ -119,7 +142,7 @@ public class AuthController {
         try {
             return Long.valueOf(userId);
         } catch (NumberFormatException ex) {
-            throw new BizException("UNAUTHORIZED", "用户标识无效");
+            throw new BizException(ResponseCode.UNAUTHORIZED, "用户标识无效");
         }
     }
 }

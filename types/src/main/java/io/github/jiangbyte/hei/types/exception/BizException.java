@@ -1,12 +1,14 @@
-package io.github.jiangbyte.hei.domain.core;
+package io.github.jiangbyte.hei.types.exception;
 
 import lombok.Getter;
 
 /**
  * 业务可预期异常：携带业务错误码，供接口层映射为统一响应。
+ * <p>
+ * 独立于领域异常，便于 types 模块不依赖 domain。
  */
 @Getter
-public class BizException extends DomainException {
+public class BizException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
 

@@ -16,9 +16,11 @@
 
 ```text
 hei-ddd-ai-lite/
+├── types/             # 跨层共享：BizException、ResponseCode
 ├── domain/            # 领域内核（无 Spring）
-├── application/       # 用例编排 / Command / Query
-├── interfaces/        # Controller / DTO / JWT / 统一响应
+├── api/               # 对外契约：I*Service + Request/Response DTO + R
+├── application/       # 用例编排 / Command / Query（刻意保留，不并入 domain）
+├── interfaces/        # Controller（实现 api）/ Assembler / JWT
 ├── infrastructure/    # 仓储实现 / 事件发布 / MySQL·Redis 等
 ├── bootstrap/         # 启动入口与 application.yml
 ├── web/               # Vue3 pnpm monorepo（portal / admin / shared）
@@ -33,20 +35,24 @@ hei-ddd-ai-lite/
 
 | 层 | 放什么 | 不放什么 |
 |----|--------|----------|
+| types | 业务异常、错误码等跨层类型 | 领域模型、HTTP、AI |
 | domain | 实体/聚合、值对象、领域事件、仓储端口、工厂、规约、领域服务、领域异常 | Spring、HTTP、SQL |
+| api | 对外契约接口、Request/Response、`R` | Controller、JWT、应用服务 |
 | application | 用例编排、事务边界、Command/Query、应用读模型 | 对外 API DTO、技术细节 |
-| interfaces | Controller、Response、Assembler、统一响应 `R`、`@RequireLogin` / `@RequireAdmin` / JWT | 业务规则、持久化 |
+| interfaces | Controller（implements api）、Assembler、`@RequireLogin` / `@RequireAdmin` / JWT | 业务规则、持久化、契约 DTO |
 | infrastructure | 仓储实现、事件发布与消费、Druid / MyBatis-Plus / Redis 等 | 领域规则 |
 | bootstrap | 启动类、`application.yml`、组件扫描范围 | 业务逻辑 |
 
 依赖方向（**不可反向**）：
 
 ```text
-bootstrap → interfaces → application → domain
-bootstrap → infrastructure → domain / application
+bootstrap → interfaces → api → types
+                 ↘ application → domain → types
+bootstrap → infrastructure → domain
 ```
 
-JWT / CORS 属于 **interfaces**；数据源 / MyBatis / Redis / S3 / Milvus 属于 **infrastructure**。
+JWT / CORS 属于 **interfaces**；数据源 / MyBatis / Redis / S3 / Milvus 属于 **infrastructure**。  
+本仓库**保留独立 application**；契约在 `api`，共享异常在 `types`；`interfaces` / `bootstrap` 名称保持不变。
 
 ---
 

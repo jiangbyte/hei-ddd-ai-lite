@@ -1,4 +1,4 @@
-package io.github.jiangbyte.hei.interfaces.web;
+package io.github.jiangbyte.hei.api.dto;
 
 import lombok.Data;
 

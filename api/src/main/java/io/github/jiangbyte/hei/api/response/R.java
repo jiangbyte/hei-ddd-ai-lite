@@ -1,5 +1,6 @@
-package io.github.jiangbyte.hei.interfaces.response;
+package io.github.jiangbyte.hei.api.response;
 
+import io.github.jiangbyte.hei.types.enums.ResponseCode;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,7 +19,7 @@ public class R<T> implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    /** 业务状态码，成功一般为 0 或 "OK" */
+    /** 业务状态码，成功一般为 {@link ResponseCode#SUCCESS} */
     private String code;
 
     /** 提示信息 */
@@ -31,14 +32,14 @@ public class R<T> implements Serializable {
      * 成功响应（无数据）。
      */
     public static <T> R<T> ok() {
-        return new R<>("0", "success", null);
+        return new R<>(ResponseCode.SUCCESS, "success", null);
     }
 
     /**
      * 成功响应（带数据）。
      */
     public static <T> R<T> ok(T data) {
-        return new R<>("0", "success", data);
+        return new R<>(ResponseCode.SUCCESS, "success", data);
     }
 
     /**

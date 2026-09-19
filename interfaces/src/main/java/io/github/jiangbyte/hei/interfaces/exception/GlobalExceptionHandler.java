@@ -1,8 +1,9 @@
 package io.github.jiangbyte.hei.interfaces.exception;
 
-import io.github.jiangbyte.hei.domain.core.BizException;
+import io.github.jiangbyte.hei.api.response.R;
 import io.github.jiangbyte.hei.domain.core.DomainException;
-import io.github.jiangbyte.hei.interfaces.response.R;
+import io.github.jiangbyte.hei.types.enums.ResponseCode;
+import io.github.jiangbyte.hei.types.exception.BizException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -35,7 +36,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DomainException.class)
     @ResponseStatus(HttpStatus.OK)
     public R<Void> handleDomainException(DomainException ex) {
-        return R.fail("DOMAIN_ERROR", ex.getMessage());
+        return R.fail(ResponseCode.DOMAIN_ERROR, ex.getMessage());
     }
 
     /**
@@ -50,7 +51,7 @@ public class GlobalExceptionHandler {
         } else if (ex instanceof BindException be && be.getBindingResult().getFieldError() != null) {
             message = be.getBindingResult().getFieldError().getDefaultMessage();
         }
-        return R.fail("VALIDATION_ERROR", message);
+        return R.fail(ResponseCode.VALIDATION_ERROR, message);
     }
 
     /**
@@ -60,6 +61,6 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public R<Void> handleException(Exception ex) {
         log.error("系统异常", ex);
-        return R.fail("SYSTEM_ERROR", "系统繁忙，请稍后重试");
+        return R.fail(ResponseCode.SYSTEM_ERROR, "系统繁忙，请稍后重试");
     }
 }

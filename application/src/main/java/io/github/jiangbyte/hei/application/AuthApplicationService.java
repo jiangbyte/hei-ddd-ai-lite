@@ -8,7 +8,7 @@ import io.github.jiangbyte.hei.application.dto.PublicUserView;
 import io.github.jiangbyte.hei.application.dto.UserProfileView;
 import io.github.jiangbyte.hei.application.query.GetMyProfileQuery;
 import io.github.jiangbyte.hei.application.query.GetPublicUserQuery;
-import io.github.jiangbyte.hei.domain.core.BizException;
+import io.github.jiangbyte.hei.types.exception.BizException;
 import io.github.jiangbyte.hei.domain.core.DomainEventPublisher;
 import io.github.jiangbyte.hei.domain.core.DomainException;
 import io.github.jiangbyte.hei.domain.factory.UserFactory;

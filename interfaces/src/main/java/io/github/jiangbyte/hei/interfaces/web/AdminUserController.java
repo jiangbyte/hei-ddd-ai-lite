@@ -1,17 +1,22 @@
 package io.github.jiangbyte.hei.interfaces.web;
 
+import io.github.jiangbyte.hei.api.IAdminUserService;
+import io.github.jiangbyte.hei.api.dto.ChangeEnabledRequest;
+import io.github.jiangbyte.hei.api.dto.CreateUserRequest;
+import io.github.jiangbyte.hei.api.response.CreateUserResponse;
+import io.github.jiangbyte.hei.api.response.PageResponse;
+import io.github.jiangbyte.hei.api.response.R;
+import io.github.jiangbyte.hei.api.response.UserProfileResponse;
 import io.github.jiangbyte.hei.application.AdminUserApplicationService;
 import io.github.jiangbyte.hei.application.command.ChangeUserEnabledCommand;
 import io.github.jiangbyte.hei.application.command.CreateUserCommand;
 import io.github.jiangbyte.hei.application.query.ListUsersQuery;
-import io.github.jiangbyte.hei.domain.core.BizException;
 import io.github.jiangbyte.hei.domain.model.UserType;
 import io.github.jiangbyte.hei.interfaces.assembler.UserAssembler;
 import io.github.jiangbyte.hei.interfaces.config.OpenApiConfiguration;
-import io.github.jiangbyte.hei.interfaces.response.PageResponse;
-import io.github.jiangbyte.hei.interfaces.response.R;
-import io.github.jiangbyte.hei.interfaces.response.UserProfileResponse;
 import io.github.jiangbyte.hei.interfaces.security.RequireAdmin;
+import io.github.jiangbyte.hei.types.enums.ResponseCode;
+import io.github.jiangbyte.hei.types.exception.BizException;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -21,9 +26,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * 后台用户管理接口（需 ADMIN）：分页列表、创建、启用/禁用。
@@ -36,7 +38,7 @@ import java.util.Map;
 @RequestMapping("/admin/users")
 @RequireAdmin
 @RequiredArgsConstructor
-public class AdminUserController {
+public class AdminUserController implements IAdminUserService {
 
     private final AdminUserApplicationService adminUserApplicationService;
     private final UserAssembler userAssembler;
@@ -44,6 +46,7 @@ public class AdminUserController {
     /**
      * 分页查询用户（query：pageNo / pageSize / username / userType）。
      */
+    @Override
     @GetMapping
     public R<PageResponse<UserProfileResponse>> list(
             @RequestParam(defaultValue = "1") int pageNo,
@@ -58,10 +61,11 @@ public class AdminUserController {
     /**
      * 创建用户（body：username / password / userType）。
      */
+    @Override
     @PostMapping
-    public R<Map<String, Object>> create(@RequestBody CreateUserRequest request) {
+    public R<CreateUserResponse> create(@RequestBody CreateUserRequest request) {
         if (request == null) {
-            throw new BizException("VALIDATION_ERROR", "请求体不能为空");
+            throw new BizException(ResponseCode.VALIDATION_ERROR, "请求体不能为空");
         }
         UserType type = parseOptionalType(request.getUserType());
         if (type == null) {
@@ -69,26 +73,27 @@ public class AdminUserController {
         }
         var result = adminUserApplicationService.createUser(
                 new CreateUserCommand(request.getUsername(), request.getPassword(), type));
-        Map<String, Object> data = new HashMap<>();
-        data.put("userId", result.getUserId());
-        data.put("username", result.getUsername());
-        data.put("userType", result.getUserType().name());
-        return R.ok(data);
+        return R.ok(CreateUserResponse.builder()
+                .userId(result.getUserId())
+                .username(result.getUsername())
+                .userType(result.getUserType().name())
+                .build());
     }
 
     /**
      * 变更启用状态（POST + body，避免 path 变量与 PUT）。
      */
+    @Override
     @PostMapping("/change-enabled")
     public R<UserProfileResponse> changeEnabled(@RequestBody ChangeEnabledRequest request) {
         if (request == null) {
-            throw new BizException("VALIDATION_ERROR", "请求体不能为空");
+            throw new BizException(ResponseCode.VALIDATION_ERROR, "请求体不能为空");
         }
         if (request.getUserId() == null) {
-            throw new BizException("VALIDATION_ERROR", "userId 不能为空");
+            throw new BizException(ResponseCode.VALIDATION_ERROR, "userId 不能为空");
         }
         if (request.getEnabled() == null) {
-            throw new BizException("VALIDATION_ERROR", "enabled 不能为空");
+            throw new BizException(ResponseCode.VALIDATION_ERROR, "enabled 不能为空");
         }
         return R.ok(userAssembler.toProfileResponse(
                 adminUserApplicationService.changeEnabled(
@@ -102,7 +107,7 @@ public class AdminUserController {
         try {
             return UserType.valueOf(userType.trim().toUpperCase());
         } catch (IllegalArgumentException ex) {
-            throw new BizException("VALIDATION_ERROR", "userType 仅支持 PORTAL 或 ADMIN");
+            throw new BizException(ResponseCode.VALIDATION_ERROR, "userType 仅支持 PORTAL 或 ADMIN");
         }
     }
 }

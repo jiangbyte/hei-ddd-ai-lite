@@ -19,6 +19,14 @@
             <groupId>io.github.jiangbyte</groupId>
             <artifactId>application</artifactId>
         </dependency>
+        <dependency>
+            <groupId>io.github.jiangbyte</groupId>
+            <artifactId>api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.github.jiangbyte</groupId>
+            <artifactId>types</artifactId>
+        </dependency>
         <!-- Spring Boot 4：Web MVC starter 重命名为 webmvc -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

@@ -1,6 +1,7 @@
 package io.github.jiangbyte.hei.interfaces.security;
 
-import io.github.jiangbyte.hei.domain.core.BizException;
+import io.github.jiangbyte.hei.types.enums.ResponseCode;
+import io.github.jiangbyte.hei.types.exception.BizException;
 import io.github.jiangbyte.hei.domain.port.TokenDenylist;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -47,7 +48,7 @@ public class LoginAuthInterceptor implements HandlerInterceptor {
             throw new UnauthorizedException("Token 已失效，请重新登录");
         }
         if (requireAdmin != null && !loginUser.isAdmin()) {
-            throw new BizException("FORBIDDEN", "需要后台管理员权限");
+            throw new BizException(ResponseCode.FORBIDDEN, "需要后台管理员权限");
         }
         AuthContext.set(loginUser);
         return true;

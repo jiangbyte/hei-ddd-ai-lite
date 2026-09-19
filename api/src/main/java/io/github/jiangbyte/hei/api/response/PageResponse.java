@@ -1,4 +1,4 @@
-package io.github.jiangbyte.hei.interfaces.response;
+package io.github.jiangbyte.hei.api.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -6,6 +6,9 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+/**
+ * 分页响应。
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

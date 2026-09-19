@@ -1,11 +1,11 @@
 package io.github.jiangbyte.hei.interfaces.assembler;
 
+import io.github.jiangbyte.hei.api.response.PageResponse;
+import io.github.jiangbyte.hei.api.response.PublicUserResponse;
+import io.github.jiangbyte.hei.api.response.UserProfileResponse;
 import io.github.jiangbyte.hei.application.dto.PageResult;
 import io.github.jiangbyte.hei.application.dto.PublicUserView;
 import io.github.jiangbyte.hei.application.dto.UserProfileView;
-import io.github.jiangbyte.hei.interfaces.response.PageResponse;
-import io.github.jiangbyte.hei.interfaces.response.PublicUserResponse;
-import io.github.jiangbyte.hei.interfaces.response.UserProfileResponse;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

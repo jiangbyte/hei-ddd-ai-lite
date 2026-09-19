@@ -10,14 +10,7 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>domain</artifactId>
-    <name>domain</name>
-    <description>领域层：基础抽象与领域模型（无 Spring 依赖）</description>
-
-    <dependencies>
-        <dependency>
-            <groupId>io.github.jiangbyte</groupId>
-            <artifactId>types</artifactId>
-        </dependency>
-    </dependencies>
+    <artifactId>types</artifactId>
+    <name>types</name>
+    <description>跨层共享：业务异常、错误码等（无业务领域模型）</description>
 </project>

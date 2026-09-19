@@ -1,4 +1,4 @@
-package io.github.jiangbyte.hei.interfaces.response;
+package io.github.jiangbyte.hei.api.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
@@ -7,6 +7,9 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+/**
+ * 用户资料响应。
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
