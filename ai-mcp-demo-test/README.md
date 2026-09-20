@@ -17,7 +17,7 @@
 | `AiMcpDemoLlmTest#test_stdio_llm_calls_write_file` | LLM | 调用 `write_file` 并核对落盘 |
 | `AiMcpDemoLlmTest#test_sse_llm_calls_read_text_file` | LLM | 同上读文件，走 SSE（需先起 Server） |
 
-协议用例不依赖大模型。LLM 用例默认 `gpt-4o-mini`；缺 `OPENAI_API_KEY` / JAR / SSE 时 **Assumption skip**。
+协议用例不依赖大模型。LLM 用例默认 `gpt-5-mini`；缺 `OPENAI_API_KEY` / JAR / SSE 时 **Assumption skip**。
 
 LLM 用例通过 `CountingToolCallback` 统计真实工具调用次数，避免只看模型「嘴上说调用了」。
 
@@ -29,7 +29,7 @@ LLM 用例通过 `CountingToolCallback` 统计真实工具调用次数，避免�
 |------|------|------|
 | `OPENAI_API_KEY` | （必填） | OpenAI API Key |
 | `OPENAI_BASE_URL` | `https://api.openai.com` | OpenAI 或兼容端点 |
-| `OPENAI_CHAT_MODEL` / `CHAT_MODEL` | `gpt-4o-mini` | 对话模型（需支持 tool calling） |
+| `OPENAI_CHAT_MODEL` / `CHAT_MODEL` | `gpt-5-mini` | 对话模型（需支持 tool calling） |
 | `SANDBOX_ROOT` | `/tmp/ai-mcp-demo-sandbox` | 与 Server roots 一致 |
 
 ## 怎么跑
@@ -45,7 +45,7 @@ java -jar target/ai-mcp-demo-1.0-SNAPSHOT.jar \
 # 终端 B：测试（从仓库根，或从 demo 内 cd ../ai-mcp-demo-test）
 cd ai-mcp-demo-test
 export OPENAI_API_KEY=sk-...
-# 可选：export OPENAI_BASE_URL=... OPENAI_CHAT_MODEL=gpt-4o-mini
+# 可选：export OPENAI_BASE_URL=... OPENAI_CHAT_MODEL=gpt-5-mini
 mvn -q test
 
 # 只跑协议 / 只跑 LLM

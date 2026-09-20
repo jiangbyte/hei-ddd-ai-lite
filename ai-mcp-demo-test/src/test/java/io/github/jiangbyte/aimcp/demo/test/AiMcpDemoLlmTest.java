@@ -47,7 +47,7 @@ class AiMcpDemoLlmTest {
 
     static final String API_KEY = envOr("OPENAI_API_KEY", "");
     static final String BASE_URL = envOr("OPENAI_BASE_URL", "https://api.openai.com");
-    static final String CHAT_MODEL = envOr("OPENAI_CHAT_MODEL", "gpt-4o-mini");
+    static final String CHAT_MODEL = envOr("OPENAI_CHAT_MODEL", "gpt-5-mini");
     static final String SSE_BASE_URL = "http://127.0.0.1:8101";
     static final Path SANDBOX_ROOT = Path.of("/tmp/ai-mcp-demo-sandbox");
     static final Duration MCP_TIMEOUT = Duration.ofSeconds(120);
