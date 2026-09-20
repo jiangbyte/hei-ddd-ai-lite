@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
  * 需引入 mybatis-plus-spring-boot4-starter，并通过 hei.ddd.mybatis.enabled 控制（默认 true）。
  */
 @AutoConfiguration
-@MapperScan("io.github.jiangbyte.hei.infrastructure.persistence")
+@MapperScan("io.github.jiangbyte.hei.infrastructure.dao")
 @ConditionalOnClass(name = "com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor")
 @ConditionalOnProperty(prefix = "hei.ddd.mybatis", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class MybatisPlusAutoConfiguration {

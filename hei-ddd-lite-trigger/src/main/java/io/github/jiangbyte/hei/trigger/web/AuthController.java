@@ -11,7 +11,7 @@ import io.github.jiangbyte.hei.application.command.LoginCommand;
 import io.github.jiangbyte.hei.application.command.RegisterUserCommand;
 import io.github.jiangbyte.hei.application.dto.AuthResultView;
 import io.github.jiangbyte.hei.application.query.GetMyProfileQuery;
-import io.github.jiangbyte.hei.domain.model.UserType;
+import io.github.jiangbyte.hei.domain.user.model.valobj.UserType;
 import io.github.jiangbyte.hei.trigger.assembler.UserAssembler;
 import io.github.jiangbyte.hei.trigger.config.OpenApiConfiguration;
 import io.github.jiangbyte.hei.trigger.security.AuthContext;

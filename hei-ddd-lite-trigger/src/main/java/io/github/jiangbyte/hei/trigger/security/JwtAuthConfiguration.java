@@ -1,6 +1,6 @@
 package io.github.jiangbyte.hei.trigger.security;
 
-import io.github.jiangbyte.hei.domain.port.TokenDenylist;
+import io.github.jiangbyte.hei.domain.user.adapter.port.TokenDenylist;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;

@@ -11,13 +11,13 @@ import io.github.jiangbyte.hei.application.query.GetPublicUserQuery;
 import io.github.jiangbyte.hei.types.exception.BizException;
 import io.github.jiangbyte.hei.domain.core.DomainEventPublisher;
 import io.github.jiangbyte.hei.domain.core.DomainException;
-import io.github.jiangbyte.hei.domain.factory.UserFactory;
-import io.github.jiangbyte.hei.domain.model.User;
-import io.github.jiangbyte.hei.domain.model.UserType;
-import io.github.jiangbyte.hei.domain.port.PasswordHasher;
-import io.github.jiangbyte.hei.domain.port.TokenDenylist;
-import io.github.jiangbyte.hei.domain.repository.UserRepository;
-import io.github.jiangbyte.hei.domain.service.UserClientAccessPolicy;
+import io.github.jiangbyte.hei.domain.user.factory.UserFactory;
+import io.github.jiangbyte.hei.domain.user.model.entity.User;
+import io.github.jiangbyte.hei.domain.user.model.valobj.UserType;
+import io.github.jiangbyte.hei.domain.user.adapter.port.PasswordHasher;
+import io.github.jiangbyte.hei.domain.user.adapter.port.TokenDenylist;
+import io.github.jiangbyte.hei.domain.user.adapter.repository.IUserRepository;
+import io.github.jiangbyte.hei.domain.user.service.UserClientAccessPolicy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,7 +31,7 @@ import java.time.Duration;
 @RequiredArgsConstructor
 public class AuthApplicationService implements ApplicationService {
 
-    private final UserRepository userRepository;
+    private final IUserRepository userRepository;
     private final PasswordHasher passwordHasher;
     private final TokenDenylist tokenDenylist;
     private final DomainEventPublisher domainEventPublisher;

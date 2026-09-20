@@ -1,6 +1,6 @@
 package io.github.jiangbyte.hei.application;
 
-import io.github.jiangbyte.hei.domain.service.UserClientAccessPolicy;
+import io.github.jiangbyte.hei.domain.user.service.UserClientAccessPolicy;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

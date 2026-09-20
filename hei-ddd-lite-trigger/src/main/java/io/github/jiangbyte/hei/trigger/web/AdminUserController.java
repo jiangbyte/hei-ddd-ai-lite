@@ -11,7 +11,7 @@ import io.github.jiangbyte.hei.application.AdminUserApplicationService;
 import io.github.jiangbyte.hei.application.command.ChangeUserEnabledCommand;
 import io.github.jiangbyte.hei.application.command.CreateUserCommand;
 import io.github.jiangbyte.hei.application.query.ListUsersQuery;
-import io.github.jiangbyte.hei.domain.model.UserType;
+import io.github.jiangbyte.hei.domain.user.model.valobj.UserType;
 import io.github.jiangbyte.hei.trigger.assembler.UserAssembler;
 import io.github.jiangbyte.hei.trigger.config.OpenApiConfiguration;
 import io.github.jiangbyte.hei.trigger.security.RequireAdmin;

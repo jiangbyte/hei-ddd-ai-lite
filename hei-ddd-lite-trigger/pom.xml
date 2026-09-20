@@ -21,6 +21,10 @@
         </dependency>
         <dependency>
             <groupId>io.github.jiangbyte</groupId>
+            <artifactId>hei-ddd-lite-infrastructure</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.github.jiangbyte</groupId>
             <artifactId>hei-ddd-lite-api</artifactId>
         </dependency>
         <dependency>

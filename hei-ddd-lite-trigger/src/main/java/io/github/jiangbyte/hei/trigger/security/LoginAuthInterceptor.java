@@ -2,7 +2,7 @@ package io.github.jiangbyte.hei.trigger.security;
 
 import io.github.jiangbyte.hei.types.enums.ResponseCode;
 import io.github.jiangbyte.hei.types.exception.BizException;
-import io.github.jiangbyte.hei.domain.port.TokenDenylist;
+import io.github.jiangbyte.hei.domain.user.adapter.port.TokenDenylist;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;

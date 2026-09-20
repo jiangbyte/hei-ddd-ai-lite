@@ -1,6 +1,6 @@
 package io.github.jiangbyte.hei.infrastructure.auth;
 
-import io.github.jiangbyte.hei.domain.port.TokenDenylist;
+import io.github.jiangbyte.hei.domain.user.adapter.port.TokenDenylist;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;

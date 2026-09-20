@@ -1,7 +1,7 @@
 package io.github.jiangbyte.hei.infrastructure.event;
 
-import io.github.jiangbyte.hei.domain.event.UserCreatedEvent;
-import io.github.jiangbyte.hei.domain.event.UserEnabledChangedEvent;
+import io.github.jiangbyte.hei.domain.user.event.UserCreatedEvent;
+import io.github.jiangbyte.hei.domain.user.event.UserEnabledChangedEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;

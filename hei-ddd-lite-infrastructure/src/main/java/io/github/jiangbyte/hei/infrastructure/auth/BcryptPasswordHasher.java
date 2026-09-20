@@ -1,6 +1,6 @@
 package io.github.jiangbyte.hei.infrastructure.auth;
 
-import io.github.jiangbyte.hei.domain.port.PasswordHasher;
+import io.github.jiangbyte.hei.domain.user.adapter.port.PasswordHasher;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 

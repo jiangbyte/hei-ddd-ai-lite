@@ -1,7 +1,7 @@
 package io.github.jiangbyte.hei.application.query;
 
 import io.github.jiangbyte.hei.application.core.Query;
-import io.github.jiangbyte.hei.domain.model.UserType;
+import io.github.jiangbyte.hei.domain.user.model.valobj.UserType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

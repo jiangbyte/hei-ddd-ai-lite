@@ -1,85 +1,84 @@
 # hei-ddd-ai-lite
 
-个人 **AI demo 开发脚手架**：按常见六层工程模型组织（types / api / trigger / domain / infrastructure / app）+ Spring Boot 4 / Spring AI 2 + MySQL / Redis + 简易账户体系 + Vue 前台/后台分离。  
+个人 **AI demo 开发脚手架**：按六层工程模型组织（types / api / trigger / domain / infrastructure / app）+ Spring Boot 4 / Spring AI 2 + MySQL / Redis + 简易账户体系 + Vue 前台/后台分离。  
 坐标：`io.github.jiangbyte` / `io.github.jiangbyte.hei.*`。
 
 适合在本地快速起一个可登录、可扩展 Agent 能力的 demo，而不是完整 AI 平台。
 
-**做齐：** Entity、ValueObject、AggregateRoot（含事件登记）、DomainEvent、DomainEventPublisher、Repository、DomainService、Factory、Specification、用例编排（Command / Query）、分层依赖倒置；用户注册登录（PORTAL / ADMIN）；Spring AI 依赖接入；Portal / Admin 前端。  
-**刻意不做：** Event Sourcing、Saga、强制 CQRS 总线、ACL、多限界上下文拆分、细粒度 RBAC、生产级多租户。
+**做齐：** 按限界上下文分包（`domain.user`）、仓储端口 `adapter.repository`、DAO 在 `infrastructure.dao`、依赖倒置、用户注册登录（PORTAL / ADMIN）、Spring AI 依赖接入、Portal / Admin 前端。  
+**刻意不做：** Event Sourcing、Saga、强制 CQRS 总线、细粒度 RBAC、生产级多租户；不按 BC 拆独立 Maven 工程。
 
-架构图源文件见 [`docs/diagrams/*.drawio`](docs/diagrams/)（可用 [diagrams.net](https://app.diagrams.net/) 打开编辑）；README 嵌入对应 SVG。前端说明见 [`web/README.md`](web/README.md)。
+架构图源文件见 [`docs/diagrams/*.drawio`](docs/diagrams/)（可用 [diagrams.net](https://app.diagrams.net/) 打开编辑）。前端说明见 [`web/README.md`](web/README.md)。
 
 ---
 
-## 1. 模块结构（常见六层工程模型）
-
-本仓库按工程实践中常见的六层划分，而不是教科书式「interfaces / application / domain / infrastructure」四层：
+## 1. 模块结构（六层工程模型）
 
 ```text
 hei-ddd-ai-lite/
-├── hei-ddd-lite-types/             # 类型层：跨层异常、错误码
+├── hei-ddd-lite-types/             # 类型层：异常、错误码
 ├── hei-ddd-lite-api/               # 契约层：I*Service + Request/Response + R
-├── hei-ddd-lite-trigger/           # 触发器层：HTTP / JWT / Assembler
-├── hei-ddd-lite-domain/            # 领域层：领域模型 + 用例编排（application 包）
-├── hei-ddd-lite-infrastructure/    # 基础设施层：仓储实现 / 事件 / MySQL·Redis 等
-├── hei-ddd-lite-app/               # 应用启动层：入口与 application.yml
+├── hei-ddd-lite-trigger/           # 触发器层：HTTP / JWT / Assembler（可依赖 infra）
+├── hei-ddd-lite-domain/            # 领域层：按 BC 分包 + application 用例（账户）
+├── hei-ddd-lite-infrastructure/    # 基础设施：dao / adapter.repository / 事件 / 中间件
+├── hei-ddd-lite-app/               # 启动层：根包入口、application.yml
 ├── web/                            # Vue3 pnpm monorepo（portal / admin / shared）
 └── docs/                           # SQL、架构图
 ```
 
-Maven 坐标统一为 `hei-ddd-lite-*`；Java 包为 `io.github.jiangbyte.hei.*`。  
-其中用例编排以 `application` 包放在 domain 模块内（六层模型的常规做法：domain 承载模型与用例，不单独拆 application 模块）。
+Maven 坐标统一为 `hei-ddd-lite-*`；Java 包为 `io.github.jiangbyte.hei.*`。
+
+领域按限界上下文分包：
+
+```text
+domain.user.{adapter,model,factory,event,specification,service}
+domain.core          # 通用底座（AggregateRoot / Repository / ValueObject …）
+application          # 账户用例编排（ApplicationService）
+```
 
 ---
 
 ## 2. 六层职责与依赖
 
-![分层架构](docs/diagrams/01-layered-architecture.svg)
-
 | 层 | 模块 | 放什么 | 不放什么 |
 |----|------|--------|----------|
-| types | `hei-ddd-lite-types` | 业务异常、错误码 | 领域模型、HTTP、AI |
+| types | `hei-ddd-lite-types` | 业务异常、错误码 | 领域模型、HTTP |
 | api | `hei-ddd-lite-api` | 对外契约接口、Request/Response、`R` | Controller、JWT、领域服务 |
-| trigger | `hei-ddd-lite-trigger` | Controller（implements `I*Service`）、Assembler、JWT | 业务规则、持久化、契约 DTO |
-| domain | `hei-ddd-lite-domain` | 聚合/VO/事件/规约/领域服务 + 用例编排（Command/Query/事务） | HTTP、SQL、对外 DTO |
-| infrastructure | `hei-ddd-lite-infrastructure` | 仓储实现、事件发布与消费、Druid / MyBatis-Plus / Redis 等 | 领域规则 |
-| app | `hei-ddd-lite-app` | 启动类、`application.yml`、组件扫描 | 业务逻辑 |
+| trigger | `hei-ddd-lite-trigger` | Controller（implements `I*Service`）、Assembler、JWT；admin 可直调 DAO | 领域规则 |
+| domain | `hei-ddd-lite-domain` | BC 模型 / 端口 / 领域服务；账户 `application` 用例 | HTTP、SQL、对外 DTO |
+| infrastructure | `hei-ddd-lite-infrastructure` | `dao` + `dao.po`、`adapter.repository`、事件、中间件配置 | 领域规则 |
+| app | `hei-ddd-lite-app` | 根包启动类、`application.yml`、组件扫描 | 业务逻辑 |
 
-依赖方向（**不可反向**）：
+依赖方向：
 
 ```text
 hei-ddd-lite-app → hei-ddd-lite-trigger → hei-ddd-lite-api → hei-ddd-lite-types
                         ↘ hei-ddd-lite-domain ─────────────→ hei-ddd-lite-types
+                        ↘ hei-ddd-lite-infrastructure
 hei-ddd-lite-app → hei-ddd-lite-infrastructure → hei-ddd-lite-domain
 ```
 
+`trigger` 依赖 `infrastructure`，便于后台 CRUD 直接使用 `I*Dao`。  
 JWT / CORS 属于 **trigger**；数据源 / MyBatis / Redis / S3 / Milvus 属于 **infrastructure**。
 
 ---
 
-## 3. DDD 核心概念
-
-![领域概念](docs/diagrams/02-domain-concepts.svg)
+## 3. DDD 核心概念与包约定
 
 | 抽象 | 包位置 | 扩展时怎么用 |
 |------|--------|----------------|
-| `Entity` | `domain.core` | 有标识、可变；按 ID 相等 |
-| `ValueObject` | `domain.core` | 不可变、按值相等；参考 `Username` |
-| `AggregateRoot` | `domain.core` | 继承它；行为内 `registerEvent` |
-| `DomainEvent` | `domain.core` | 不可变事实；参考 `UserCreatedEvent` |
-| `DomainEventPublisher` | `domain.core` | 领域端口；infra 提供 `SpringDomainEventPublisher` |
-| `Repository` | `domain.core` | 以聚合为粒度；端口在 domain，实现在 infra |
-| `Factory` | `domain.core` | 创建合法聚合；参考 `UserFactory` |
-| `Specification` | `domain.core` | 可复用判定；参考 `UsernameFormatSpecification` |
-| `DomainService` | `domain.core` / `domain.service` | 跨聚合无状态规则；参考 `UserClientAccessPolicy`（`application` 包 `@Bean` 装配） |
-| `ApplicationService` | `application.core` | 编排用例 + `@Transactional`（位于 domain 模块） |
-| `Command` / `Query` | `application.core` | 写/读用例入参 |
+| `Entity` / `ValueObject` / `AggregateRoot` | `domain.core` | 通用底座；BC 内实体放 `domain.<bc>.model.entity`，VO 放 `model.valobj` |
+| `DomainEvent` | `domain.<bc>.event` | 不可变事实；参考 `UserCreatedEvent` |
+| `DomainEventPublisher` | `domain.core` | 端口在 domain；infra 提供 `SpringDomainEventPublisher` |
+| 仓储端口 | `domain.<bc>.adapter.repository.IXxxRepository` | 实现在 `infrastructure.adapter.repository` |
+| 外部端口 | `domain.<bc>.adapter.port` | 如 `PasswordHasher`；实现在 infra |
+| DAO / PO | `infrastructure.dao` / `dao.po` | `IXxxDao` + 表映射对象 |
+| `Factory` / `Specification` / 领域服务 | `domain.<bc>.factory` 等 | 参考 `UserFactory`、`UserClientAccessPolicy` |
+| 账户用例 | `application` | `*ApplicationService` + Command/Query |
 
 包级约定见各模块 `package-info.java`。
 
 ---
-
 ## 4. 账户体系
 
 | 类型 | 说明 |
@@ -109,22 +108,17 @@ JWT / CORS 属于 **trigger**；数据源 / MyBatis / Redis / S3 / Milvus 属于
 
 ## 5. 基于本脚手架开发
 
-![用例扩展](docs/diagrams/03-usecase-extension.svg)
+按限界上下文扩展。账户参考 `domain.user` + `application`：
 
-按**用户管理**竖切（`User` / `UserFactory` / `UserClientAccessPolicy` /
-`AuthApplicationService` / `AdminUserApplicationService`）复制扩展，或在其上增加 Agent / 会话等 AI demo 能力：
-
-1. **领域模型**（`domain.model`）：新建聚合继承 `AggregateRoot`，值对象实现 `ValueObject`（参考 `Username`）。
-2. **Factory / Event / Spec / DomainService**（`domain.factory` / `event` / `specification` / `service`）：创建时校验、登记事件、跨聚合规则（参考 `UserFactory`、`UserCreatedEvent`、`UsernameFormatSpecification`、`UserClientAccessPolicy`）。
-3. **Repository 端口**（`domain.repository`）：`XxxRepository extends Repository<Xxx, ID>`（参考 `UserRepository`）。
-4. **用例编排**（domain 模块 `application` 包）：`CreateXxxCommand` / `GetXxxQuery` + `XxxApplicationService`（事务边界；保存后 `pullDomainEvents` 发布）；无 Spring 的领域服务用 `@Bean` 装配（参考 `UserDomainConfiguration`）。
-5. **基础设施**（`infrastructure.persistence` / `event`）：实现仓储、事件发布与 `@EventListener` 消费（参考 `UserDomainEventListener`）；对接 Spring AI 客户端等。
-6. **触发器**（`trigger.web`）：Controller + Assembler（参考 `AdminUserController` / `AuthController`）；契约 DTO 在 `api`。
-7. **启动**：若新增需扫描的 infra 包，更新 `HeiDddAiLiteApplication` 的 `scanBasePackages`。
+1. **领域模型**（`domain.<bc>.model.entity` / `valobj`）：聚合继承 `AggregateRoot`，值对象实现 `ValueObject`。
+2. **Factory / Event / Spec / 领域服务**（`domain.<bc>.factory` / `event` / `specification` / `service`）。
+3. **仓储端口**（`domain.<bc>.adapter.repository.IXxxRepository`）。
+4. **编排**：账户用 `application.*ApplicationService` + Command/Query。
+5. **基础设施**：`infrastructure.dao.IXxxDao` + `dao.po`；仓储实现 `infrastructure.adapter.repository.XxxRepository`；事件监听参考 `UserDomainEventListener`。
+6. **触发器**（`trigger.web`）：Controller + Assembler；契约在 `api`；后台管理可直调 `I*Dao`。
+7. **启动**：业务组件放在 `io.github.jiangbyte.hei.*` 下即可被根包启动类扫描；可选中间件用 `@AutoConfiguration` + `AutoConfiguration.imports`，无需改 `scanBasePackages` 白名单。
 
 ### 领域事件约定
-
-![事件链路](docs/diagrams/04-domain-event-flow.svg)
 
 1. 聚合行为内 `registerEvent(...)`。
 2. 应用服务 `repository.save(aggregate)`。
@@ -141,7 +135,6 @@ JWT / CORS 属于 **trigger**；数据源 / MyBatis / Redis / S3 / Milvus 属于
 - **DomainService**：规则不属于单一聚合（如端类型访问策略），且仍是纯领域逻辑；由 `application` 包 `@Bean` 注册。
 
 ---
-
 ## 6. 快速启动
 
 ### 前置
@@ -215,7 +208,7 @@ MySQL（Druid + MyBatis-Plus）与 Redis **默认启用**。S3 / Milvus 按开�
 - 不做 Saga / 流程编排框架
 - 不做强制 CQRS 总线（Command/Query 仅为入参约定）
 - 不做 ACL / 防腐层脚手架
-- 不做多限界上下文工程拆分
+- 不按 BC 拆独立 Maven 工程（BC 仅在 domain 包内划分）
 - 不做细粒度 RBAC（仅 PORTAL / ADMIN 端类型隔离）
 - 不做生产级多租户 / 计费 / 模型路由平台
 
