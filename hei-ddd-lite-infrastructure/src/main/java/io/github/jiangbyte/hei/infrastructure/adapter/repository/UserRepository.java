@@ -6,6 +6,7 @@ import io.github.jiangbyte.hei.domain.user.adapter.repository.IUserRepository;
 import io.github.jiangbyte.hei.domain.user.model.entity.User;
 import io.github.jiangbyte.hei.domain.user.model.valobj.UserType;
 import io.github.jiangbyte.hei.infrastructure.dao.IUserDao;
+import io.github.jiangbyte.hei.infrastructure.dao.po.UserPo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -23,7 +24,7 @@ public class UserRepository implements IUserRepository {
 
     @Override
     public User save(User aggregate) {
-        var po = toPo(aggregate);
+        UserPo po = toPo(aggregate);
         if (po.getId() == null) {
             userDao.insert(po);
         } else {
@@ -52,8 +53,8 @@ public class UserRepository implements IUserRepository {
         if (username == null || username.isBlank()) {
             return Optional.empty();
         }
-        var po = userDao.selectOne(new LambdaQueryWrapper<io.github.jiangbyte.hei.infrastructure.dao.po.User>()
-                .eq(io.github.jiangbyte.hei.infrastructure.dao.po.User::getUsername, username.trim()));
+        UserPo po = userDao.selectOne(new LambdaQueryWrapper<UserPo>()
+                .eq(UserPo::getUsername, username.trim()));
         return Optional.ofNullable(po).map(this::toDomain);
     }
 
@@ -62,15 +63,14 @@ public class UserRepository implements IUserRepository {
         if (username == null || username.isBlank()) {
             return false;
         }
-        Long count = userDao.selectCount(new LambdaQueryWrapper<io.github.jiangbyte.hei.infrastructure.dao.po.User>()
-                .eq(io.github.jiangbyte.hei.infrastructure.dao.po.User::getUsername, username.trim()));
+        Long count = userDao.selectCount(new LambdaQueryWrapper<UserPo>()
+                .eq(UserPo::getUsername, username.trim()));
         return count != null && count > 0;
     }
 
     @Override
     public List<User> findPage(int pageNo, int pageSize, String usernameLike, UserType userType) {
-        Page<io.github.jiangbyte.hei.infrastructure.dao.po.User> page = userDao.selectPage(
-                new Page<>(pageNo, pageSize), buildWrapper(usernameLike, userType));
+        Page<UserPo> page = userDao.selectPage(new Page<>(pageNo, pageSize), buildWrapper(usernameLike, userType));
         return page.getRecords().stream().map(this::toDomain).toList();
     }
 
@@ -80,21 +80,20 @@ public class UserRepository implements IUserRepository {
         return count == null ? 0L : count;
     }
 
-    private static LambdaQueryWrapper<io.github.jiangbyte.hei.infrastructure.dao.po.User> buildWrapper(
-            String usernameLike, UserType userType) {
-        LambdaQueryWrapper<io.github.jiangbyte.hei.infrastructure.dao.po.User> wrapper = new LambdaQueryWrapper<>();
+    private static LambdaQueryWrapper<UserPo> buildWrapper(String usernameLike, UserType userType) {
+        LambdaQueryWrapper<UserPo> wrapper = new LambdaQueryWrapper<>();
         if (usernameLike != null && !usernameLike.isBlank()) {
-            wrapper.like(io.github.jiangbyte.hei.infrastructure.dao.po.User::getUsername, usernameLike.trim());
+            wrapper.like(UserPo::getUsername, usernameLike.trim());
         }
         if (userType != null) {
-            wrapper.eq(io.github.jiangbyte.hei.infrastructure.dao.po.User::getUserType, userType.name());
+            wrapper.eq(UserPo::getUserType, userType.name());
         }
-        wrapper.orderByDesc(io.github.jiangbyte.hei.infrastructure.dao.po.User::getId);
+        wrapper.orderByDesc(UserPo::getId);
         return wrapper;
     }
 
-    private io.github.jiangbyte.hei.infrastructure.dao.po.User toPo(User user) {
-        var po = new io.github.jiangbyte.hei.infrastructure.dao.po.User();
+    private UserPo toPo(User user) {
+        UserPo po = new UserPo();
         po.setId(user.getId());
         po.setUsername(user.getUsername());
         po.setPasswordHash(user.getPasswordHash());
@@ -105,7 +104,7 @@ public class UserRepository implements IUserRepository {
         return po;
     }
 
-    private User toDomain(io.github.jiangbyte.hei.infrastructure.dao.po.User po) {
+    private User toDomain(UserPo po) {
         return User.restore(
                 po.getId(),
                 po.getUsername(),

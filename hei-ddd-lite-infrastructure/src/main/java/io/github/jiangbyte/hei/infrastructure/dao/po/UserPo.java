@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
  */
 @Data
 @TableName("sys_user")
-public class User {
+public class UserPo {
 
     @TableId(type = IdType.AUTO)
     private Long id;
